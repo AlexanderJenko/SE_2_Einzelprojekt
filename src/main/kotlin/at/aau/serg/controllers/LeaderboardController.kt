@@ -23,23 +23,26 @@ class LeaderboardController(
     */
 
     @GetMapping
+    // List -> ResponseEntity<List<GameResult>>
+    // Ermöglicht das setzen von HTTP-Statuse (Liste ist im "Body" gespeichert)
     fun getLeaderboard(@RequestParam(required = false) rank: Int?): ResponseEntity<List<GameResult>> {
 
-        // 1. Sortierung: Score absteigend, dann Zeit aufsteigend
+        // Sortierung: Score absteigend, dann Zeit aufsteigend
         val sortedLeaderboard = gameResultService.getGameResults()
             .sortedWith(compareBy({ -it.score }, { it.timeInSeconds }))
 
-        // 2. Kein Parameter -> Alles zurückgeben
+        // Kein Parameter -> Alles zurückgeben
         if (rank == null) {
+            //ResponseEntity.ok setzt HTTP-Status auf 200
             return ResponseEntity.ok(sortedLeaderboard)
         }
 
-        // 3. HTTP 400 bei ungültigem Rang
+        // HTTP 400 (ResponseEntity.badRequest().build()) bei ungültigem Rang
         if (rank <= 0 || rank > sortedLeaderboard.size) {
             return ResponseEntity.badRequest().build()
         }
 
-        // 4. Index-Grenzen berechnen
+        // Index-Grenzen berechnen
         val targetIndex = rank - 1
         val startIndex = max(0, targetIndex - 3)
         val endIndex = min(sortedLeaderboard.size - 1, targetIndex + 3)
